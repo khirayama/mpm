@@ -21,13 +21,13 @@ function getFileName(entryName: string, virtualPath: number): string | null {
   return normalizeEntryName;
 }
 
-export async function readFileFromArchive(fileName: string, buffer: any, { virtualPath = 0 }: any = {}): Promise<any> {
+export async function readFileFromArchive(fileName: string, buffer: Buffer, virtualPath: number): Promise<{}> {
   return new Promise(
     (resolve: any, reject: any): void => {
-      const extractor: any = tarStream.extract();
+      const extractor: tarStream.Extract = tarStream.extract();
 
-      extractor.on('entry', (header: any, stream: any, next: any) => {
-        if (getFileName(header.name, virtualPath) === fileName) {
+      extractor.on('entry', (headers: tarStream.Headers, stream: tarStream.Pack, next: any) => {
+        if (getFileName(headers.name, virtualPath) === fileName) {
           const buffers: Buffer[] = [];
 
           stream.on(
@@ -80,8 +80,10 @@ export async function readFileFromArchive(fileName: string, buffer: any, { virtu
   );
 }
 
-export async function readPackageJsonFromArchive(packageBuffer: any): Promise<any> {
-  return readFileFromArchive('package.json', packageBuffer, { virtualPath: 1 });
+export async function readPackageJsonFromArchive(packageBuffer: Buffer): Promise<any> {
+  const virtualPath: number = 1;
+
+  return readFileFromArchive('package.json', packageBuffer, virtualPath);
 }
 
 export async function extractArchiveTo(packageBuffer: any, target: any, { virtualPath = 0 }: any = {}): Promise<any> {
