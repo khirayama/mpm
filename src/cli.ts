@@ -16,10 +16,13 @@ const projectDependencies: IPackage[] = Object.keys(projectPackageJson.dependenc
   };
 });
 
-getPackageDependencyTree({
-  name: 'project',
-  reference: 'root',
-  dependencies: projectDependencies,
-}).then((tree: IPackage) => {
+getPackageDependencyTree(
+  {
+    name: 'project',
+    reference: 'root',
+    dependencies: projectDependencies,
+  },
+  new Map(),
+).then((tree: IPackage) => {
   console.log(util.inspect(tree, { depth: Infinity }));
 });

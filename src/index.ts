@@ -16,20 +16,45 @@ export interface IPackageJson {
   dependencies: { [key: string]: string };
 }
 
-export async function getPackageDependencyTree(pkg: IPackage): Promise<IPackage> {
+export async function getPackageDependencyTree(pkg: IPackage, available: Map<string, string>): Promise<IPackage> {
   return {
     name: pkg.name,
     reference: pkg.reference,
     dependencies: await Promise.all(
-      pkg.dependencies.map(async (volatileDependency: IPackage) => {
-        const pinnedDependency: IPackage = await getPinnedReference(volatileDependency);
-        const subDependencies: IPackage[] = await getPackageDependencies(pinnedDependency);
+      pkg.dependencies
+        .filter(
+          (volatileDependency: IPackage): boolean => {
+            const availableReference: string = available.get(volatileDependency.name);
+            if (volatileDependency.reference === availableReference) {
+              return false;
+            }
+            if (
+              semver.validRange(volatileDependency.reference) &&
+              semver.satisfies(availableReference, volatileDependency.reference)
+            ) {
+              return false;
+            }
 
-        return getPackageDependencyTree({
-          ...pinnedDependency,
-          dependencies: subDependencies,
-        });
-      }),
+            return true;
+          },
+        )
+        .map(
+          async (volatileDependency: IPackage): Promise<IPackage> => {
+            const pinnedDependency: IPackage = await getPinnedReference(volatileDependency);
+            const subDependencies: IPackage[] = await getPackageDependencies(pinnedDependency);
+
+            const subAvailable: Map<string, string> = new Map(available);
+            subAvailable.set(pinnedDependency.name, pinnedDependency.reference);
+
+            return getPackageDependencyTree(
+              {
+                ...pinnedDependency,
+                dependencies: subDependencies,
+              },
+              subAvailable,
+            );
+          },
+        ),
     ),
   };
 }
