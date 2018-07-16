@@ -2,20 +2,32 @@
 import * as assert from 'power-assert';
 
 // tslint:disable-next-line:no-relative-imports
-import {
-  IPackage,
-  getPinnedReference,
-  fetchPackage,
-} from '../src/index';
-
-const packageJSON: { dependencies: { [key: string]: string } } = {
-  dependencies: {
-    react: '^15.5.4',
-    'babel-core': '6.25.0',
-  },
-};
+import { fetchPackage, getPackageDependencies, getPinnedReference, IPackage } from '../src/index';
 
 describe('mpm', () => {
+  describe('getPackageDependencies', () => {
+    it('Runable', (done: any) => {
+      getPackageDependencies({
+        name: 'react',
+        reference: '15.6.1',
+      }).then(
+        (res: IPackage[]): void => {
+          const actual: any = res;
+          // FYI: There is possibility to change version
+          const expected: any = [
+            { name: 'create-react-class', reference: '^15.6.0' },
+            { name: 'fbjs', reference: '^0.8.9' },
+            { name: 'loose-envify', reference: '^1.1.0' },
+            { name: 'object-assign', reference: '^4.1.0' },
+            { name: 'prop-types', reference: '^15.5.10' },
+          ];
+          assert.deepEqual(actual, expected);
+          done();
+        },
+      );
+    });
+  });
+
   describe('getPinnedReference', () => {
     it('Semver ^', (done: any) => {
       getPinnedReference({
@@ -23,9 +35,10 @@ describe('mpm', () => {
         reference: '^15.5.4',
       }).then((pkg: IPackage) => {
         const actual: IPackage = pkg;
+        // FYI: There is possibility to change version
         const expected: IPackage = {
           name: 'react',
-          reference: '15.6.2', // FYI: There is possibility to change version
+          reference: '15.6.2',
         };
         assert.deepEqual(actual, expected);
         done();
@@ -38,9 +51,10 @@ describe('mpm', () => {
         reference: '~15.3.0',
       }).then((pkg: IPackage) => {
         const actual: IPackage = pkg;
+        // FYI: There is possibility to change version
         const expected: IPackage = {
           name: 'react',
-          reference: '15.3.2', // FYI: There is possibility to change version
+          reference: '15.3.2',
         };
         assert.deepEqual(actual, expected);
         done();
@@ -70,7 +84,7 @@ describe('mpm', () => {
         const actual: IPackage = pkg;
         const expected: IPackage = {
           name: 'react',
-        reference: '/tmp/react-15.3.2.tar.gz',
+          reference: '/tmp/react-15.3.2.tar.gz',
         };
         assert.deepEqual(actual, expected);
         done();
