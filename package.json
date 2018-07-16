@@ -4,6 +4,7 @@
   "description": "",
   "main": "src/index.ts",
   "scripts": {
+    "start": "NODE_PATH=src ts-node src/cli.ts",
     "test": "NODE_PATH=src mocha --require espower-typescript/guess test/**/*.ts",
     "test:watch": "NODE_PATH=src mocha --require espower-typescript/guess test/**/*.ts --watch-extensions ts --watch",
     "lint": "tslint --format verbose -c tslint.json 'src/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}'",
