@@ -2,7 +2,7 @@
 import * as path from 'path';
 import * as util from 'util';
 
-import { getPackageDependencyTree, IPackage, IPackageJson } from 'index';
+import { getPackageDependencyTree, IPackage, IPackageJson } from 'mpm';
 
 const cwd: string = process.argv[2] || process.cwd();
 const packageJsonPath: string = path.resolve(cwd, 'package.json');

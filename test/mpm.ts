@@ -2,7 +2,7 @@
 import * as assert from 'power-assert';
 
 // tslint:disable-next-line:no-relative-imports
-import { fetchPackage, getPackageDependencies, getPinnedReference, IPackage } from '../src/index';
+import { fetchPackage, getPackageDependencies, getPinnedReference, IPackage } from '../src/mpm';
 
 describe('mpm', () => {
   describe('getPackageDependencies', () => {
