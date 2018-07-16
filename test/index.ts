@@ -10,16 +10,37 @@ describe('mpm', () => {
       getPackageDependencies({
         name: 'react',
         reference: '15.6.1',
+        dependencies: [],
       }).then(
         (res: IPackage[]): void => {
           const actual: any = res;
           // FYI: There is possibility to change version
           const expected: any = [
-            { name: 'create-react-class', reference: '^15.6.0' },
-            { name: 'fbjs', reference: '^0.8.9' },
-            { name: 'loose-envify', reference: '^1.1.0' },
-            { name: 'object-assign', reference: '^4.1.0' },
-            { name: 'prop-types', reference: '^15.5.10' },
+            {
+              name: 'create-react-class',
+              reference: '^15.6.0',
+              dependencies: [],
+            },
+            {
+              name: 'fbjs',
+              reference: '^0.8.9',
+              dependencies: [],
+            },
+            {
+              name: 'loose-envify',
+              reference: '^1.1.0',
+              dependencies: [],
+            },
+            {
+              name: 'object-assign',
+              reference: '^4.1.0',
+              dependencies: [],
+            },
+            {
+              name: 'prop-types',
+              reference: '^15.5.10',
+              dependencies: [],
+            },
           ];
           assert.deepEqual(actual, expected);
           done();
@@ -33,12 +54,14 @@ describe('mpm', () => {
       getPinnedReference({
         name: 'react',
         reference: '^15.5.4',
+        dependencies: [],
       }).then((pkg: IPackage) => {
         const actual: IPackage = pkg;
         // FYI: There is possibility to change version
         const expected: IPackage = {
           name: 'react',
           reference: '15.6.2',
+          dependencies: [],
         };
         assert.deepEqual(actual, expected);
         done();
@@ -49,12 +72,14 @@ describe('mpm', () => {
       getPinnedReference({
         name: 'react',
         reference: '~15.3.0',
+        dependencies: [],
       }).then((pkg: IPackage) => {
         const actual: IPackage = pkg;
         // FYI: There is possibility to change version
         const expected: IPackage = {
           name: 'react',
           reference: '15.3.2',
+          dependencies: [],
         };
         assert.deepEqual(actual, expected);
         done();
@@ -65,11 +90,13 @@ describe('mpm', () => {
       getPinnedReference({
         name: 'react',
         reference: '15.3.0',
+        dependencies: [],
       }).then((pkg: IPackage) => {
         const actual: IPackage = pkg;
         const expected: IPackage = {
           name: 'react',
           reference: '15.3.0',
+          dependencies: [],
         };
         assert.deepEqual(actual, expected);
         done();
@@ -80,11 +107,13 @@ describe('mpm', () => {
       getPinnedReference({
         name: 'react',
         reference: '/tmp/react-15.3.2.tar.gz',
+        dependencies: [],
       }).then((pkg: IPackage) => {
         const actual: IPackage = pkg;
         const expected: IPackage = {
           name: 'react',
           reference: '/tmp/react-15.3.2.tar.gz',
+          dependencies: [],
         };
         assert.deepEqual(actual, expected);
         done();
@@ -97,6 +126,7 @@ describe('mpm', () => {
       fetchPackage({
         name: 'react',
         reference: '15.4.1',
+        dependencies: [],
       }).then(() => {
         done();
       });
