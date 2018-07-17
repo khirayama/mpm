@@ -98,24 +98,28 @@ export async function getPinnedReference(pkg: IPackage): Promise<IPackage> {
   };
 }
 
+// Fetch the package given as argument as a buffer.
 export async function fetchPackage(pkg: IPackage): Promise<Buffer> {
   if (['/', './', '../'].some((prefix: string) => pkg.reference.startsWith(prefix))) {
     return fsExtra.readFile(pkg.reference);
   }
 
   if (semver.valid(pkg.reference)) {
+    // nodeFetch supports only absolute URL. So, we need to retry it using absolute URL.
+    // When we set absolute URL, `semver.valid` is null.
+    // So we will call `nodeFetch` to get package.
     return fetchPackage({
       name: pkg.name,
       reference: `https://registry.yarnpkg.com/${pkg.name}/-/${pkg.name}-${pkg.reference}.tgz`,
       dependencies: [],
     });
+  } else {
+    const res: Response = await nodeFetch(pkg.reference);
+
+    if (!res.ok) {
+      throw new Error(`Couldn't fetch package "${pkg.reference}"`);
+    }
+
+    return res.buffer();
   }
-
-  const res: Response = await nodeFetch(pkg.reference);
-
-  if (!res.ok) {
-    throw new Error(`Couldn't fetch package "${pkg.reference}"`);
-  }
-
-  return res.buffer();
 }
