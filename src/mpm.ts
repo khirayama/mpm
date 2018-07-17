@@ -83,6 +83,38 @@ export async function linkPackages(pkg: IPackage, cwd: string): Promise<void> {
   );
 }
 
+export function optimizePackageTree(pkg: IPackage): IPackage {
+  const dependencies: IPackage[] = pkg.dependencies.map((dependency: IPackage) => {
+    return optimizePackageTree(dependency);
+  });
+
+  for (const hardDependency of dependencies.slice()) {
+    for (const subDependency of hardDependency.dependencies.slice()) {
+      const availableDependency: IPackage = pkg.dependencies.find((dependency: IPackage) => {
+        return dependency.name === subDependency.name;
+      });
+
+      if (!availableDependency) {
+        dependencies.push(subDependency);
+      }
+
+      if (!availableDependency || availableDependency.reference === subDependency.reference) {
+        hardDependency.dependencies.splice(
+          hardDependency.dependencies.findIndex((dependency: IPackage) => {
+            return dependency.name === subDependency.name;
+          }),
+        );
+      }
+    }
+  }
+
+  return {
+    name: pkg.name,
+    reference: pkg.reference,
+    dependencies,
+  };
+}
+
 // Finds dependency packages of the package given as argument recursively.
 export async function getPackageDependencyTree(pkg: IPackage, available: Map<string, string>): Promise<IPackage> {
   return {
