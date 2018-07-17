@@ -76,6 +76,7 @@ export async function getPackageDependencies(pkg: IPackage): Promise<IPackage[]>
   );
 }
 
+// Get a package that have pinned version reference.
 export async function getPinnedReference(pkg: IPackage): Promise<IPackage> {
   let reference: string = pkg.reference;
 
