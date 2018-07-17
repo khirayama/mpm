@@ -1,3 +1,4 @@
+// tslint:disable:no-suspicious-comment
 // Doc: https://yarnpkg.com/blog/2017/07/11/lets-dev-a-package-manager/
 import * as cp from 'child_process';
 import * as path from 'path';
