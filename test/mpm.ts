@@ -134,12 +134,24 @@ describe('mpm', () => {
   });
 
   describe('fetchPackage', () => {
-    it('Runable', (done: any) => {
+    it('Semver fixed version', (done: any) => {
       fetchPackage({
         name: 'react',
         reference: '15.4.1',
         dependencies: [],
       }).then(() => {
+        assert.ok(true);
+        done();
+      });
+    });
+
+    it('Semver ^', (done: any) => {
+      fetchPackage({
+        name: 'react',
+        reference: '^15.5.4',
+        dependencies: [],
+      }).catch(() => {
+        assert.ok(true);
         done();
       });
     });
