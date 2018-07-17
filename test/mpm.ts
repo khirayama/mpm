@@ -1,4 +1,4 @@
-// tslint:disable:no-any
+// tslint:disable:no-any max-func-body-length
 import * as assert from 'power-assert';
 
 // tslint:disable-next-line:no-relative-imports
@@ -60,7 +60,144 @@ describe('mpm', () => {
 
   describe('getPackageDependencyTree', () => {
     it('Runable', () => {
-      assert(true, true);
+      getPackageDependencyTree(
+        {
+          name: 'react',
+          reference: '^15.5.4',
+          dependencies: [],
+        },
+        new Map(),
+      ).then((res: IPackage) => {
+        // console.log(JSON.stringify(res));
+        const actual: IPackage = res;
+        const expected: IPackage = {
+          name: 'react',
+          reference: '^15.5.4',
+          dependencies: [
+            {
+              name: 'create-react-class',
+              reference: '15.6.3',
+              dependencies: [
+                {
+                  name: 'fbjs',
+                  reference: '0.8.17',
+                  dependencies: [
+                    { name: 'core-js', reference: '1.2.7', dependencies: [] },
+                    {
+                      name: 'isomorphic-fetch',
+                      reference: '2.2.1',
+                      dependencies: [
+                        {
+                          name: 'node-fetch',
+                          reference: '1.7.3',
+                          dependencies: [
+                            {
+                              name: 'encoding',
+                              reference: '0.1.12',
+                              dependencies: [
+                                {
+                                  name: 'iconv-lite',
+                                  reference: '0.4.23',
+                                  dependencies: [{ name: 'safer-buffer', reference: '2.1.2', dependencies: [] }],
+                                },
+                              ],
+                            },
+                            { name: 'is-stream', reference: '1.1.0', dependencies: [] },
+                          ],
+                        },
+                        { name: 'whatwg-fetch', reference: '2.0.4', dependencies: [] },
+                      ],
+                    },
+                    {
+                      name: 'loose-envify',
+                      reference: '1.4.0',
+                      dependencies: [{ name: 'js-tokens', reference: '4.0.0', dependencies: [] }],
+                    },
+                    { name: 'object-assign', reference: '4.1.1', dependencies: [] },
+                    {
+                      name: 'promise',
+                      reference: '7.3.1',
+                      dependencies: [{ name: 'asap', reference: '2.0.6', dependencies: [] }],
+                    },
+                    { name: 'setimmediate', reference: '1.0.5', dependencies: [] },
+                    { name: 'ua-parser-js', reference: '0.7.18', dependencies: [] },
+                  ],
+                },
+                {
+                  name: 'loose-envify',
+                  reference: '1.4.0',
+                  dependencies: [{ name: 'js-tokens', reference: '4.0.0', dependencies: [] }],
+                },
+                { name: 'object-assign', reference: '4.1.1', dependencies: [] },
+              ],
+            },
+            {
+              name: 'fbjs',
+              reference: '0.8.17',
+              dependencies: [
+                { name: 'core-js', reference: '1.2.7', dependencies: [] },
+                {
+                  name: 'isomorphic-fetch',
+                  reference: '2.2.1',
+                  dependencies: [
+                    {
+                      name: 'node-fetch',
+                      reference: '1.7.3',
+                      dependencies: [
+                        {
+                          name: 'encoding',
+                          reference: '0.1.12',
+                          dependencies: [
+                            {
+                              name: 'iconv-lite',
+                              reference: '0.4.23',
+                              dependencies: [{ name: 'safer-buffer', reference: '2.1.2', dependencies: [] }],
+                            },
+                          ],
+                        },
+                        { name: 'is-stream', reference: '1.1.0', dependencies: [] },
+                      ],
+                    },
+                    { name: 'whatwg-fetch', reference: '2.0.4', dependencies: [] },
+                  ],
+                },
+                {
+                  name: 'loose-envify',
+                  reference: '1.4.0',
+                  dependencies: [{ name: 'js-tokens', reference: '4.0.0', dependencies: [] }],
+                },
+                { name: 'object-assign', reference: '4.1.1', dependencies: [] },
+                {
+                  name: 'promise',
+                  reference: '7.3.1',
+                  dependencies: [{ name: 'asap', reference: '2.0.6', dependencies: [] }],
+                },
+                { name: 'setimmediate', reference: '1.0.5', dependencies: [] },
+                { name: 'ua-parser-js', reference: '0.7.18', dependencies: [] },
+              ],
+            },
+            {
+              name: 'loose-envify',
+              reference: '1.4.0',
+              dependencies: [{ name: 'js-tokens', reference: '4.0.0', dependencies: [] }],
+            },
+            { name: 'object-assign', reference: '4.1.1', dependencies: [] },
+            {
+              name: 'prop-types',
+              reference: '15.6.2',
+              dependencies: [
+                {
+                  name: 'loose-envify',
+                  reference: '1.4.0',
+                  dependencies: [{ name: 'js-tokens', reference: '4.0.0', dependencies: [] }],
+                },
+                { name: 'object-assign', reference: '4.1.1', dependencies: [] },
+              ],
+            },
+          ],
+        };
+        assert.deepEqual(actual, expected);
+      });
     });
   });
 
