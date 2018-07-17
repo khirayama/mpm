@@ -86,7 +86,7 @@ export async function readPackageJsonFromArchive(packageBuffer: Buffer): Promise
   return readFileFromArchive('package.json', packageBuffer, virtualPath);
 }
 
-export async function extractArchiveTo(packageBuffer: any, target: any, { virtualPath = 0 }: any = {}): Promise<any> {
+export async function extractArchiveTo(packageBuffer: Buffer, target: string, virtualPath: number): Promise<any> {
   return new Promise(
     (resolve: any, reject: any): void => {
       function map(header: any): any {
@@ -117,8 +117,10 @@ export async function extractArchiveTo(packageBuffer: any, target: any, { virtua
   );
 }
 
-export async function extractNpmArchiveTo(packageBuffer: any, target: any): Promise<any> {
-  return extractArchiveTo(packageBuffer, target, { virtualPath: 1 });
+export async function extractNpmArchiveTo(packageBuffer: Buffer, target: string): Promise<any> {
+  const virtualPath: number = 1;
+
+  return extractArchiveTo(packageBuffer, target, virtualPath);
 }
 
 export async function trackProgress(cb: any): Promise<any> {
