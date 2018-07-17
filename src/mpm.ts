@@ -1,9 +1,13 @@
 // Doc: https://yarnpkg.com/blog/2017/07/11/lets-dev-a-package-manager/
+import * as cp from 'child_process';
+import * as path from 'path';
+import * as util from 'util';
+
 import * as fsExtra from 'fs-extra';
 import nodeFetch, { Response } from 'node-fetch';
 import * as semver from 'semver';
 
-import { readPackageJsonFromArchive } from 'utilities';
+import { extractNpmArchiveTo, readPackageJsonFromArchive } from 'utilities';
 
 // interfaces
 export interface IPackage {
@@ -14,6 +18,65 @@ export interface IPackage {
 
 export interface IPackageJson {
   dependencies: { [key: string]: string };
+  bin?: object;
+  scripts?: object;
+}
+
+const exec: (command: string, options: { cwd: string; env: object }) => Promise<object> = util.promisify(cp.exec);
+
+// Description
+export async function linkPackages(pkg: IPackage, cwd: string): Promise<void> {
+  const dependencyTree: IPackage = await getPackageDependencyTree(pkg, new Map());
+
+  if (pkg.reference) {
+    const packageBuffer: Buffer = await fetchPackage(pkg);
+    await extractNpmArchiveTo(packageBuffer, cwd);
+  }
+
+  await Promise.all(
+    pkg.dependencies.map(async (dependency: IPackage) => {
+      const target: string = `${cwd}/node_modules/${name}`;
+      const binTarget: string = `${cwd}/node_modules/.bin`;
+
+      await linkPackages(pkg, target);
+
+      // tslint:disable-next-line:non-literal-require
+      const dependencyPackageJson: IPackageJson = require(`${target}/package.json`);
+      let bin: object = dependencyPackageJson.bin || {};
+
+      if (typeof bin === 'string') {
+        bin = {
+          [pkg.name]: bin,
+        };
+      }
+
+      for (const binName of Object.keys(bin)) {
+        const source: string = path.resolve(target, bin[binName]);
+        const dest: string = `${binTarget}/${binName}`;
+
+        await fsExtra.mkdirp(`${cwd}/node_modules/.bin`);
+        await fsExtra.symlink(path.relative(binTarget, source), dest);
+      }
+
+      if (dependencyPackageJson.scripts) {
+        for (const scriptName of ['preinstall', 'install', 'postinstall']) {
+          const script: string = dependencyPackageJson.scripts[scriptName];
+
+          if (!script) {
+            continue;
+          }
+
+          await exec(script, {
+            cwd: target,
+            env: {
+              ...process.env,
+              PATH: `${target}/node_modules/.bin:${process.env.PATH}`,
+            },
+          });
+        }
+      }
+    }),
+  );
 }
 
 // Finds dependency packages of the package given as argument recursively.
