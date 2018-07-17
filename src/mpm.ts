@@ -60,6 +60,7 @@ export async function getPackageDependencyTree(pkg: IPackage, available: Map<str
   };
 }
 
+// Finds dependency packages of the package given as argument.
 export async function getPackageDependencies(pkg: IPackage): Promise<IPackage[]> {
   const packageBuffer: Buffer = await fetchPackage(pkg);
   const packageJson: IPackageJson = JSON.parse(await readPackageJsonFromArchive(packageBuffer));
