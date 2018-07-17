@@ -6,7 +6,7 @@ import {
   fetchPackage,
   getPackageDependencies,
   getPackageDependencyTree,
-  getPinnedReference,
+  getPinnedReferencePackage,
   IPackage,
   linkPackages,
 } from '../src/mpm';
@@ -64,9 +64,9 @@ describe('mpm', () => {
     });
   });
 
-  describe('getPinnedReference', () => {
+  describe('getPinnedReferencePackage', () => {
     it('Semver ^', (done: any) => {
-      getPinnedReference({
+      getPinnedReferencePackage({
         name: 'react',
         reference: '^15.5.4',
         dependencies: [],
@@ -84,7 +84,7 @@ describe('mpm', () => {
     });
 
     it('Semver ~', (done: any) => {
-      getPinnedReference({
+      getPinnedReferencePackage({
         name: 'react',
         reference: '~15.3.0',
         dependencies: [],
@@ -102,7 +102,7 @@ describe('mpm', () => {
     });
 
     it('Semver fixed version', (done: any) => {
-      getPinnedReference({
+      getPinnedReferencePackage({
         name: 'react',
         reference: '15.3.0',
         dependencies: [],
@@ -119,7 +119,7 @@ describe('mpm', () => {
     });
 
     it('Semver fixed file', (done: any) => {
-      getPinnedReference({
+      getPinnedReferencePackage({
         name: 'react',
         reference: '/tmp/react-15.3.2.tar.gz',
         dependencies: [],

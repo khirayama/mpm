@@ -41,7 +41,7 @@ export async function getPackageDependencyTree(pkg: IPackage, available: Map<str
         )
         .map(
           async (volatileDependency: IPackage): Promise<IPackage> => {
-            const pinnedDependency: IPackage = await getPinnedReference(volatileDependency);
+            const pinnedDependency: IPackage = await getPinnedReferencePackage(volatileDependency);
             const subDependencies: IPackage[] = await getPackageDependencies(pinnedDependency);
 
             const subAvailable: Map<string, string> = new Map(available);
@@ -77,7 +77,7 @@ export async function getPackageDependencies(pkg: IPackage): Promise<IPackage[]>
 }
 
 // Get a package that have pinned version reference.
-export async function getPinnedReference(pkg: IPackage): Promise<IPackage> {
+export async function getPinnedReferencePackage(pkg: IPackage): Promise<IPackage> {
   let reference: string = pkg.reference;
 
   if (semver.validRange(pkg.reference) && !semver.valid(pkg.reference)) {
