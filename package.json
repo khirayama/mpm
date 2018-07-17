@@ -5,8 +5,8 @@
   "main": "src/index.ts",
   "scripts": {
     "start": "NODE_PATH=src ts-node src/cli.ts",
-    "test": "NODE_PATH=src mocha --require espower-typescript/guess test/**/*.ts",
-    "test:watch": "NODE_PATH=src mocha --require espower-typescript/guess test/**/*.ts --watch-extensions ts --watch",
+    "test": "NODE_PATH=src mocha --timeout 5000 --require espower-typescript/guess test/**/*.ts",
+    "test:watch": "NODE_PATH=src mocha --timeout 5000 --require espower-typescript/guess test/**/*.ts --watch-extensions ts --watch",
     "lint": "tslint --format verbose -c tslint.json 'src/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}'",
     "lint:fix": "tslint --fix --format verbose -c tslint.json 'src/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}'",
     "format": "prettier --ignore-path .gitignore --config .prettierrc --write 'src/**/!(*.json|*.jpg|*.pug|*.html|*.png|*.webp|*.svg)' 'test/**/!(*.json|*.jpg|*.pug|*.html|*.png|*.webp|*.svg)'",
