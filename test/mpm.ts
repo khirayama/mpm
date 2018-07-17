@@ -61,9 +61,9 @@ describe('mpm', () => {
   describe('getPackageDependencyTree', () => {
     it('Runable', (done: any) => {
       getPinnedReferencePackage({
-          name: 'react',
-          reference: '^15.5.4',
-          dependencies: [],
+        name: 'react',
+        reference: '^15.5.4',
+        dependencies: [],
       }).then((pinnedDependency: IPackage) => {
         getPackageDependencies(pinnedDependency).then((dependencies: IPackage[]) => {
           getPackageDependencyTree(
