@@ -9,6 +9,9 @@ import * as semver from 'semver';
 
 import { extractNpmArchiveTo, readPackageJsonFromArchive } from 'utilities';
 
+// TODO: Needs to define IEntirePackage has dependencies and pinned reference
+// TODO: IPackage.dependencies should have `null`
+
 // interfaces
 export interface IPackage {
   name: string;
