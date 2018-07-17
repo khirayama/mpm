@@ -16,6 +16,7 @@ export interface IPackageJson {
   dependencies: { [key: string]: string };
 }
 
+// Finds dependency packages of the package given as argument recursively.
 export async function getPackageDependencyTree(pkg: IPackage, available: Map<string, string>): Promise<IPackage> {
   return {
     name: pkg.name,
