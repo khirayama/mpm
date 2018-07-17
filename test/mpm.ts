@@ -18,46 +18,49 @@ describe('mpm', () => {
         name: 'react',
         reference: '15.6.1',
         dependencies: [],
-      }).then(
-        (res: IPackage[]): void => {
-          const actual: any = res;
-          // FYI: There is possibility to change version
-          const expected: any = [
-            {
-              name: 'create-react-class',
-              reference: '^15.6.0',
-              dependencies: [],
-            },
-            {
-              name: 'fbjs',
-              reference: '^0.8.9',
-              dependencies: [],
-            },
-            {
-              name: 'loose-envify',
-              reference: '^1.1.0',
-              dependencies: [],
-            },
-            {
-              name: 'object-assign',
-              reference: '^4.1.0',
-              dependencies: [],
-            },
-            {
-              name: 'prop-types',
-              reference: '^15.5.10',
-              dependencies: [],
-            },
-          ];
-          assert.deepEqual(actual, expected);
-          done();
-        },
-      );
+      })
+        .then(
+          (res: IPackage[]): void => {
+            const actual: any = res;
+            // FYI: There is possibility to change version
+            const expected: any = [
+              {
+                name: 'create-react-class',
+                reference: '^15.6.0',
+                dependencies: [],
+              },
+              {
+                name: 'fbjs',
+                reference: '^0.8.9',
+                dependencies: [],
+              },
+              {
+                name: 'loose-envify',
+                reference: '^1.1.0',
+                dependencies: [],
+              },
+              {
+                name: 'object-assign',
+                reference: '^4.1.0',
+                dependencies: [],
+              },
+              {
+                name: 'prop-types',
+                reference: '^15.5.10',
+                dependencies: [],
+              },
+            ];
+            assert.deepEqual(actual, expected);
+            done();
+          },
+        )
+        .catch(done);
     });
   });
 
   describe('getPackageDependencyTree', () => {
     it('Runable', () => {
+      assert(true, true);
     });
   });
 
