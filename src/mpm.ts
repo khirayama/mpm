@@ -16,7 +16,7 @@ import { extractNpmArchiveTo, readPackageJsonFromArchive } from 'utilities';
 // interfaces
 export interface IPackage {
   name: string;
-  reference: string;
+  reference: string | null;
   dependencies: IPackage[];
 }
 
@@ -206,7 +206,9 @@ export async function fetchPackage(pkg: IPackage): Promise<Buffer> {
     return fsExtra.readFile(pkg.reference);
   }
 
-  if (semver.valid(pkg.reference)) {
+  if (pkg.reference === null) {
+    // Skip - for project ownself
+  } else if (semver.valid(pkg.reference)) {
     // nodeFetch supports only absolute URL. So, we need to retry it using absolute URL.
     // When we set absolute URL, `semver.valid` is null.
     // So we will call `nodeFetch` to get package.
@@ -215,7 +217,7 @@ export async function fetchPackage(pkg: IPackage): Promise<Buffer> {
       reference: `https://registry.yarnpkg.com/${pkg.name}/-/${pkg.name}-${pkg.reference}.tgz`,
       dependencies: [],
     });
-  } else {
+  } else if (pkg.reference.indexOf('http') !== -1) {
     const res: Response = await nodeFetch(pkg.reference);
 
     if (!res.ok) {
@@ -223,5 +225,7 @@ export async function fetchPackage(pkg: IPackage): Promise<Buffer> {
     }
 
     return res.buffer();
+  } else {
+    throw new Error(`Invalid reference: ${pkg.name}@${pkg.reference}`);
   }
 }
