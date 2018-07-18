@@ -24,13 +24,19 @@ export interface IPackageJson {
   dependencies: { [key: string]: string };
   bin?: object;
   scripts?: object;
+  version?: string;
+  name?: string;
 }
 
 const exec: (command: string, options: { cwd: string; env: object }) => Promise<object> = util.promisify(cp.exec);
 
 // Description
-export async function linkPackages(pkg: IPackage, cwd: string): Promise<void> {
-  const dependencyTree: IPackage = await getPackageDependencyTree(pkg, new Map());
+export async function linkPackages(pkg: IPackage, cwd: string, pace?: any): Promise<void> {
+  if (pace) {
+    pace.total += 1;
+  }
+
+  const dependencyTree: IPackage = await getPackageDependencyTree(pkg, new Map(), pace);
 
   if (pkg.reference) {
     const packageBuffer: Buffer = await fetchPackage(pkg);
@@ -39,10 +45,10 @@ export async function linkPackages(pkg: IPackage, cwd: string): Promise<void> {
 
   await Promise.all(
     pkg.dependencies.map(async (dependency: IPackage) => {
-      const target: string = `${cwd}/node_modules/${name}`;
+      const target: string = `${cwd}/node_modules/${dependency.name}`;
       const binTarget: string = `${cwd}/node_modules/.bin`;
 
-      await linkPackages(pkg, target);
+      await linkPackages(pkg, target, pace);
 
       // tslint:disable-next-line:non-literal-require
       const dependencyPackageJson: IPackageJson = require(`${target}/package.json`);
@@ -81,6 +87,10 @@ export async function linkPackages(pkg: IPackage, cwd: string): Promise<void> {
       }
     }),
   );
+
+  if (pace) {
+    pace.tick();
+  }
 }
 
 export function optimizePackageTree(pkg: IPackage): IPackage {
@@ -116,7 +126,11 @@ export function optimizePackageTree(pkg: IPackage): IPackage {
 }
 
 // Finds dependency packages of the package given as argument recursively.
-export async function getPackageDependencyTree(pkg: IPackage, available: Map<string, string>): Promise<IPackage> {
+export async function getPackageDependencyTree(
+  pkg: IPackage,
+  available: Map<string, string>,
+  pace?: any,
+): Promise<IPackage> {
   return {
     name: pkg.name,
     reference: pkg.reference,
@@ -140,11 +154,19 @@ export async function getPackageDependencyTree(pkg: IPackage, available: Map<str
         )
         .map(
           async (volatileDependency: IPackage): Promise<IPackage> => {
+            if (pace) {
+              pace.total += 1;
+            }
+
             const pinnedDependency: IPackage = await getPinnedReferencePackage(volatileDependency);
             const subDependencies: IPackage[] = await getPackageDependencies(pinnedDependency);
 
             const subAvailable: Map<string, string> = new Map(available);
             subAvailable.set(pinnedDependency.name, pinnedDependency.reference);
+
+            if (pace) {
+              pace.tick();
+            }
 
             return getPackageDependencyTree(
               {
@@ -152,6 +174,7 @@ export async function getPackageDependencyTree(pkg: IPackage, available: Map<str
                 dependencies: subDependencies,
               },
               subAvailable,
+              pace,
             );
           },
         ),
