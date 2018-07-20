@@ -1,7 +1,8 @@
-// tslint:disable:no-suspicious-comment no-any
+// tslint:disable:no-suspicious-comment
 // Doc: https://yarnpkg.com/blog/2017/07/11/lets-dev-a-package-manager/
 import * as cp from 'child_process';
 import * as path from 'path';
+import * as Progress from 'progress';
 import * as util from 'util';
 
 import * as fsExtra from 'fs-extra';
@@ -30,7 +31,7 @@ export interface IPackageJson {
 const exec: (command: string, options: { cwd: string; env: object }) => Promise<object> = util.promisify(cp.exec);
 
 // Description
-export async function linkPackages(pkg: IPackage, cwd: string, pace?: any): Promise<void> {
+export async function linkPackages(pkg: IPackage, cwd: string, pace?: Progress): Promise<void> {
   if (pace) {
     pace.total += 1;
   }
@@ -128,7 +129,7 @@ export function optimizePackageTree(pkg: IPackage): IPackage {
 export async function getPackageDependencyTree(
   pkg: IPackage,
   available: Map<string, string>,
-  pace?: any,
+  pace?: Progress,
 ): Promise<IPackage> {
   return {
     name: pkg.name,

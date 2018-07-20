@@ -1,5 +1,6 @@
-// tslint:disable:no-console no-any
+// tslint:disable:no-console
 import * as path from 'path';
+import * as Progress from 'progress';
 import * as util from 'util';
 
 import { getPackageDependencyTree, IPackage, IPackageJson, linkPackages, optimizePackageTree } from 'mpm';
@@ -23,7 +24,7 @@ Promise.resolve()
   .then(() => {
     console.log('Resolving the package tree...');
 
-    return trackProgress((pace: any) =>
+    return trackProgress((pace: Progress) =>
       getPackageDependencyTree(
         {
           name: projectPackageJson.name,
@@ -38,7 +39,7 @@ Promise.resolve()
   .then((packageTree: IPackage) => {
     console.log('Linking the packages on the filesystem...');
 
-    return trackProgress((pace: any) => linkPackages(optimizePackageTree(packageTree), dest, pace));
+    return trackProgress((pace: Progress) => linkPackages(optimizePackageTree(packageTree), dest, pace));
   })
   .catch((err: Error) => {
     console.log(err.stack);
