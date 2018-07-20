@@ -1,13 +1,16 @@
-// tslint:disable:no-console
+// tslint:disable:no-console no-any
 import * as path from 'path';
 import * as util from 'util';
 
-import { getPackageDependencyTree, IPackage, IPackageJson } from 'mpm';
+import { getPackageDependencyTree, IPackage, IPackageJson, linkPackages, optimizePackageTree } from 'mpm';
+import { trackProgress } from 'utilities';
 
 const cwd: string = process.argv[2] || process.cwd();
 const packageJsonPath: string = path.resolve(cwd, 'package.json');
 // tslint:disable-next-line:non-literal-require no-var-requires
 const projectPackageJson: IPackageJson = require(packageJsonPath);
+const dest: string = path.resolve(process.argv[3] || cwd);
+
 const projectDependencies: IPackage[] = Object.keys(projectPackageJson.dependencies || {}).map((name: string) => {
   return {
     name,
@@ -16,13 +19,28 @@ const projectDependencies: IPackage[] = Object.keys(projectPackageJson.dependenc
   };
 });
 
-getPackageDependencyTree(
-  {
-    name: 'project',
-    reference: 'root',
-    dependencies: projectDependencies,
-  },
-  new Map(),
-).then((tree: IPackage) => {
-  console.log(util.inspect(tree, { depth: Infinity }));
-});
+Promise.resolve()
+  .then(() => {
+    console.log('Resolving the package tree...');
+
+    return trackProgress((pace: any) =>
+      getPackageDependencyTree(
+        {
+          name: projectPackageJson.name,
+          reference: null,
+          dependencies: projectDependencies,
+        },
+        new Map(),
+        pace,
+      ),
+    );
+  })
+  .then((packageTree: IPackage) => {
+    console.log('Linking the packages on the filesystem...');
+
+    return trackProgress((pace: any) => linkPackages(optimizePackageTree(packageTree), dest, pace));
+  })
+  .catch((err: Error) => {
+    console.log(err.stack);
+    process.exit(1);
+  });

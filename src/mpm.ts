@@ -1,4 +1,4 @@
-// tslint:disable:no-suspicious-comment
+// tslint:disable:no-suspicious-comment no-any
 // Doc: https://yarnpkg.com/blog/2017/07/11/lets-dev-a-package-manager/
 import * as cp from 'child_process';
 import * as path from 'path';
@@ -24,7 +24,6 @@ export interface IPackageJson {
   dependencies: { [key: string]: string };
   bin?: object;
   scripts?: object;
-  version?: string;
   name?: string;
 }
 
