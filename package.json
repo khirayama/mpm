@@ -10,7 +10,8 @@
     "lint": "tslint --format verbose -c tslint.json 'src/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}'",
     "lint:fix": "tslint --fix --format verbose -c tslint.json 'src/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}'",
     "format": "prettier --ignore-path .gitignore --config .prettierrc --write 'src/**/!(*.json|*.jpg|*.pug|*.html|*.png|*.webp|*.svg)' 'test/**/!(*.json|*.jpg|*.pug|*.html|*.png|*.webp|*.svg)'",
-    "precommit": "npm run lint:fix && npm run format"
+    "precommit": "npm run lint:fix && npm run format",
+    "check": "npx npm-check-updates"
   },
   "author": "khirayama",
   "license": "ISC",
