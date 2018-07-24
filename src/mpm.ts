@@ -11,35 +11,185 @@ import * as semver from 'semver';
 
 import { extractNpmArchiveTo, readPackageJsonFromArchive } from 'utilities';
 
-// TODO: Needs to define IEntirePackage has dependencies and pinned reference
-// TODO: IPackage.dependencies should have `null`
-
-// interfaces
-export interface IPackage {
-  name: string;
-  reference: string | null;
-  dependencies: IPackage[];
-}
-
 export interface IPackageJson {
-  dependencies: { [key: string]: string };
   bin?: object;
   scripts?: object;
   name?: string;
+  dependencies?: { [key: string]: string };
 }
 
+export interface IBasePackage {
+  name: string;
+  reference: string | null;
+}
+
+export interface IPackage extends IBasePackage {
+  pinnedReference: string | null;
+  url: string | null;
+  dependencies: IPackage[];
+}
+
+// Get pinned reference according to semver
+export async function getPinnedReference(name: string, reference: string): Promise<string> {
+  let pinnedReference: string = reference;
+
+  if (semver.validRange(reference) && !semver.valid(reference)) {
+    const res: Response = await nodeFetch(`https://registry.yarnpkg.com/${name}`);
+    const info: { versions: object } = await res.json();
+
+    const versions: string[] = Object.keys(info.versions);
+    const maxSatisfying: string | null = semver.maxSatisfying(versions, reference);
+
+    if (maxSatisfying === null) {
+      throw new Error(`Couldn't find a version matching "${reference}" for package "${name}"`);
+    }
+
+    pinnedReference = maxSatisfying;
+  }
+
+  return pinnedReference;
+}
+
+// create package tree
+export async function createPacakgeTree(
+  pkg: IBasePackage,
+  available: Map<string, string>,
+  pace?: Progress,
+): Promise<IPackage> {
+  const pinnedReference: string = await getPinnedReference(pkg.name, pkg.reference);
+  const url: string = `https://registry.yarnpkg.com/${pkg.name}/-/${pkg.name}-${pinnedReference}.tgz`;
+
+  let packageJson: IPackageJson;
+  if (pkg.reference === null) {
+    // Root package - your own project
+    const cwd: string = process.argv[2] || process.cwd();
+    const packageJsonPath: string = path.resolve(cwd, 'package.json');
+    // tslint:disable-next-line:non-literal-require no-var-requires
+    packageJson = require(packageJsonPath);
+  } else {
+    const res: Response = await nodeFetch(url);
+
+    if (!res.ok) {
+      throw new Error(`Couldn't fetch package "${url}"`);
+    }
+
+    const packageBuffer: Buffer = await res.buffer();
+    packageJson = JSON.parse(await readPackageJsonFromArchive(packageBuffer));
+  }
+
+  const dependencies: IPackage[] = await Promise.all(
+    Object.keys(packageJson.dependencies || {})
+      .filter(
+        (name: string): boolean => {
+          const dependency: IBasePackage = {
+            name,
+            reference: packageJson.dependencies[name],
+          };
+          const availableReference: string = available.get(dependency.name);
+
+          if (dependency.reference === availableReference) {
+            return false;
+          }
+
+          if (semver.validRange(dependency.reference) && semver.satisfies(availableReference, dependency.reference)) {
+            return false;
+          }
+
+          return true;
+        },
+      )
+      .map(
+        async (name: string): Promise<IPackage> => {
+          if (pace) {
+            pace.total += 1;
+          }
+
+          const dependency: IBasePackage = {
+            name,
+            reference: packageJson.dependencies[name],
+          };
+
+          const subAvailable: Map<string, string> = new Map(available);
+          subAvailable.set(dependency.name, dependency.reference);
+
+          if (pace) {
+            pace.tick();
+          }
+
+          return createPacakgeTree(
+            {
+              name,
+              reference: packageJson.dependencies[name],
+            },
+            subAvailable,
+            pace,
+          );
+        },
+      ),
+  );
+
+  return {
+    name: pkg.name,
+    reference: pkg.reference,
+    pinnedReference,
+    url,
+    dependencies,
+  };
+}
+
+// Optimize package tree
+export function optimizePackageTree(pkg: IPackage): IPackage {
+  const dependencies: IPackage[] = pkg.dependencies.map((dependency: IPackage) => {
+    return optimizePackageTree(dependency);
+  });
+
+  for (const hardDependency of dependencies.slice()) {
+    for (const subDependency of hardDependency.dependencies.slice()) {
+      const availableDependency: IPackage = pkg.dependencies.find((dependency: IPackage) => {
+        return dependency.name === subDependency.name;
+      });
+
+      if (!availableDependency) {
+        dependencies.push(subDependency);
+      }
+
+      if (!availableDependency || availableDependency.reference === subDependency.reference) {
+        hardDependency.dependencies.splice(
+          hardDependency.dependencies.findIndex((dependency: IPackage) => {
+            return dependency.name === subDependency.name;
+          }),
+        );
+      }
+    }
+  }
+
+  return {
+    name: pkg.name,
+    reference: pkg.reference,
+    pinnedReference: pkg.pinnedReference,
+    url: pkg.url,
+    dependencies,
+  };
+}
+
+// Link packages
 const exec: (command: string, options: { cwd: string; env: object }) => Promise<object> = util.promisify(cp.exec);
 
-// Description
 export async function linkPackages(pkg: IPackage, cwd: string, pace?: Progress): Promise<void> {
   if (pace) {
     pace.total += 1;
   }
 
-  const dependencyTree: IPackage = await getPackageDependencyTree(pkg, new Map(), pace);
+  const dependencyTree: IPackage = await createPacakgeTree(pkg, new Map(), pace);
 
   if (pkg.reference) {
-    const packageBuffer: Buffer = await fetchPackage(pkg);
+    const res: Response = await nodeFetch(pkg.reference);
+
+    if (!res.ok) {
+      throw new Error(`Couldn't fetch package "${pkg.reference}"`);
+    }
+
+    const packageBuffer: Buffer = await res.buffer();
     await extractNpmArchiveTo(packageBuffer, cwd);
   }
 
@@ -90,165 +240,5 @@ export async function linkPackages(pkg: IPackage, cwd: string, pace?: Progress):
 
   if (pace) {
     pace.tick();
-  }
-}
-
-export function optimizePackageTree(pkg: IPackage): IPackage {
-  const dependencies: IPackage[] = pkg.dependencies.map((dependency: IPackage) => {
-    return optimizePackageTree(dependency);
-  });
-
-  for (const hardDependency of dependencies.slice()) {
-    for (const subDependency of hardDependency.dependencies.slice()) {
-      const availableDependency: IPackage = pkg.dependencies.find((dependency: IPackage) => {
-        return dependency.name === subDependency.name;
-      });
-
-      if (!availableDependency) {
-        dependencies.push(subDependency);
-      }
-
-      if (!availableDependency || availableDependency.reference === subDependency.reference) {
-        hardDependency.dependencies.splice(
-          hardDependency.dependencies.findIndex((dependency: IPackage) => {
-            return dependency.name === subDependency.name;
-          }),
-        );
-      }
-    }
-  }
-
-  return {
-    name: pkg.name,
-    reference: pkg.reference,
-    dependencies,
-  };
-}
-
-// Finds dependency packages of the package given as argument recursively.
-export async function getPackageDependencyTree(
-  pkg: IPackage,
-  available: Map<string, string>,
-  pace?: Progress,
-): Promise<IPackage> {
-  return {
-    name: pkg.name,
-    reference: pkg.reference,
-    dependencies: await Promise.all(
-      pkg.dependencies
-        .filter(
-          (volatileDependency: IPackage): boolean => {
-            const availableReference: string = available.get(volatileDependency.name);
-            if (volatileDependency.reference === availableReference) {
-              return false;
-            }
-            if (
-              semver.validRange(volatileDependency.reference) &&
-              semver.satisfies(availableReference, volatileDependency.reference)
-            ) {
-              return false;
-            }
-
-            return true;
-          },
-        )
-        .map(
-          async (volatileDependency: IPackage): Promise<IPackage> => {
-            if (pace) {
-              pace.total += 1;
-            }
-
-            const pinnedDependency: IPackage = await getPinnedReferencePackage(volatileDependency);
-            const subDependencies: IPackage[] = await getPackageDependencies(pinnedDependency);
-
-            const subAvailable: Map<string, string> = new Map(available);
-            subAvailable.set(pinnedDependency.name, pinnedDependency.reference);
-
-            if (pace) {
-              pace.tick();
-            }
-
-            return getPackageDependencyTree(
-              {
-                ...pinnedDependency,
-                dependencies: subDependencies,
-              },
-              subAvailable,
-              pace,
-            );
-          },
-        ),
-    ),
-  };
-}
-
-// Finds dependency packages of the package given as argument.
-export async function getPackageDependencies(pkg: IPackage): Promise<IPackage[]> {
-  const packageBuffer: Buffer = await fetchPackage(pkg);
-  const packageJson: IPackageJson = JSON.parse(await readPackageJsonFromArchive(packageBuffer));
-
-  return Object.keys(packageJson.dependencies || {}).map(
-    (name: string): IPackage => {
-      return {
-        name,
-        reference: packageJson.dependencies[name],
-        dependencies: [],
-      };
-    },
-  );
-}
-
-// Get a package that have pinned version reference.
-export async function getPinnedReferencePackage(pkg: IPackage): Promise<IPackage> {
-  let reference: string = pkg.reference;
-
-  if (semver.validRange(pkg.reference) && !semver.valid(pkg.reference)) {
-    const res: Response = await nodeFetch(`https://registry.yarnpkg.com/${pkg.name}`);
-    const info: { versions: object } = await res.json();
-
-    const versions: string[] = Object.keys(info.versions);
-    const maxSatisfying: string | null = semver.maxSatisfying(versions, pkg.reference);
-
-    if (maxSatisfying === null) {
-      throw new Error(`Couldn't find a version matching "${pkg.reference}" for package "${pkg.name}"`);
-    }
-
-    reference = maxSatisfying;
-  }
-
-  return {
-    name: pkg.name,
-    reference,
-    dependencies: [],
-  };
-}
-
-// Fetch the package given as argument as a buffer.
-export async function fetchPackage(pkg: IPackage): Promise<Buffer> {
-  if (['/', './', '../'].some((prefix: string) => pkg.reference.startsWith(prefix))) {
-    return fsExtra.readFile(pkg.reference);
-  }
-
-  if (pkg.reference === null) {
-    // Skip - for project ownself
-  } else if (semver.valid(pkg.reference)) {
-    // nodeFetch supports only absolute URL. So, we need to retry it using absolute URL.
-    // When we set absolute URL, `semver.valid` is null.
-    // So we will call `nodeFetch` to get package.
-    return fetchPackage({
-      name: pkg.name,
-      reference: `https://registry.yarnpkg.com/${pkg.name}/-/${pkg.name}-${pkg.reference}.tgz`,
-      dependencies: [],
-    });
-  } else if (pkg.reference.indexOf('http') !== -1) {
-    const res: Response = await nodeFetch(pkg.reference);
-
-    if (!res.ok) {
-      throw new Error(`Couldn't fetch package "${pkg.reference}"`);
-    }
-
-    return res.buffer();
-  } else {
-    throw new Error(`Invalid reference: ${pkg.name}@${pkg.reference}`);
   }
 }

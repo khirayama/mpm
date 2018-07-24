@@ -123,7 +123,7 @@ export async function extractNpmArchiveTo(packageBuffer: Buffer, target: string)
   return extractArchiveTo(packageBuffer, target, virtualPath);
 }
 
-export async function trackProgress(cb: any): Promise<Progress> {
+export async function trackProgress<T>(cb: any): Promise<T> {
   const pace: Progress = new Progress(':bar :current/:total (:elapseds)', { width: 80, total: 1 });
 
   try {
