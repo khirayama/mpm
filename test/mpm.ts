@@ -3,304 +3,628 @@ import * as assert from 'power-assert';
 
 // tslint:disable-next-line:no-relative-imports
 import {
-  fetchPackage,
-  getPackageDependencies,
-  getPackageDependencyTree,
-  getPinnedReferencePackage,
+  createPacakgeTree,
+  getPinnedReference,
+  IBasePackage,
   IPackage,
   linkPackages,
+  optimizePackageTree,
 } from '../src/mpm';
 
+declare var Map: any;
+
 describe('mpm', () => {
-  describe('getPackageDependencies', () => {
-    it('Runable', (done: any) => {
-      getPackageDependencies({
+  describe('createPacakgeTree', () => {
+    it('Create package tree that has shallow dependency', (done: any) => {
+      const expected: IPackage = {
+        name: 'micro-emitter',
+        reference: '1.1.15',
+        pinnedReference: '1.1.15',
+        url: 'https://registry.yarnpkg.com/micro-emitter/-/micro-emitter-1.1.15.tgz',
+        dependencies: [],
+      };
+      createPacakgeTree(
+        {
+          name: 'micro-emitter',
+          reference: '1.1.15',
+        },
+        new Map(),
+      )
+        .then((actual: IPackage) => {
+          // console.log(JSON.stringify(actual));
+          assert.deepEqual(actual, expected);
+          done();
+        })
+        .catch(done);
+    });
+
+    it('Create package tree that has deep dependency', (done: any) => {
+      const expected: IPackage = {
         name: 'react',
         reference: '15.6.1',
-        dependencies: [],
-      })
-        .then(
-          (res: IPackage[]): void => {
-            const actual: any = res;
-            // FYI: There is possibility to change version
-            const expected: any = [
-              {
-                name: 'create-react-class',
-                reference: '^15.6.0',
-                dependencies: [],
-              },
+        pinnedReference: '15.6.1',
+        url: 'https://registry.yarnpkg.com/react/-/react-15.6.1.tgz',
+        dependencies: [
+          {
+            name: 'create-react-class',
+            reference: '^15.6.0',
+            pinnedReference: '15.6.3',
+            url: 'https://registry.yarnpkg.com/create-react-class/-/create-react-class-15.6.3.tgz',
+            dependencies: [
               {
                 name: 'fbjs',
                 reference: '^0.8.9',
-                dependencies: [],
+                pinnedReference: '0.8.17',
+                url: 'https://registry.yarnpkg.com/fbjs/-/fbjs-0.8.17.tgz',
+                dependencies: [
+                  {
+                    name: 'core-js',
+                    reference: '^1.0.0',
+                    pinnedReference: '1.2.7',
+                    url: 'https://registry.yarnpkg.com/core-js/-/core-js-1.2.7.tgz',
+                    dependencies: [],
+                  },
+                  {
+                    name: 'isomorphic-fetch',
+                    reference: '^2.1.1',
+                    pinnedReference: '2.2.1',
+                    url: 'https://registry.yarnpkg.com/isomorphic-fetch/-/isomorphic-fetch-2.2.1.tgz',
+                    dependencies: [
+                      {
+                        name: 'node-fetch',
+                        reference: '^1.0.1',
+                        pinnedReference: '1.7.3',
+                        url: 'https://registry.yarnpkg.com/node-fetch/-/node-fetch-1.7.3.tgz',
+                        dependencies: [
+                          {
+                            name: 'encoding',
+                            reference: '^0.1.11',
+                            pinnedReference: '0.1.12',
+                            url: 'https://registry.yarnpkg.com/encoding/-/encoding-0.1.12.tgz',
+                            dependencies: [
+                              {
+                                name: 'iconv-lite',
+                                reference: '~0.4.13',
+                                pinnedReference: '0.4.23',
+                                url: 'https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.4.23.tgz',
+                                dependencies: [
+                                  {
+                                    name: 'safer-buffer',
+                                    reference: '>= 2.1.2 < 3',
+                                    pinnedReference: '2.1.2',
+                                    url: 'https://registry.yarnpkg.com/safer-buffer/-/safer-buffer-2.1.2.tgz',
+                                    dependencies: [],
+                                  },
+                                ],
+                              },
+                            ],
+                          },
+                          {
+                            name: 'is-stream',
+                            reference: '^1.0.1',
+                            pinnedReference: '1.1.0',
+                            url: 'https://registry.yarnpkg.com/is-stream/-/is-stream-1.1.0.tgz',
+                            dependencies: [],
+                          },
+                        ],
+                      },
+                      {
+                        name: 'whatwg-fetch',
+                        reference: '>=0.10.0',
+                        pinnedReference: '2.0.4',
+                        url: 'https://registry.yarnpkg.com/whatwg-fetch/-/whatwg-fetch-2.0.4.tgz',
+                        dependencies: [],
+                      },
+                    ],
+                  },
+                  {
+                    name: 'loose-envify',
+                    reference: '^1.0.0',
+                    pinnedReference: '1.4.0',
+                    url: 'https://registry.yarnpkg.com/loose-envify/-/loose-envify-1.4.0.tgz',
+                    dependencies: [
+                      {
+                        name: 'js-tokens',
+                        reference: '^3.0.0 || ^4.0.0',
+                        pinnedReference: '4.0.0',
+                        url: 'https://registry.yarnpkg.com/js-tokens/-/js-tokens-4.0.0.tgz',
+                        dependencies: [],
+                      },
+                    ],
+                  },
+                  {
+                    name: 'object-assign',
+                    reference: '^4.1.0',
+                    pinnedReference: '4.1.1',
+                    url: 'https://registry.yarnpkg.com/object-assign/-/object-assign-4.1.1.tgz',
+                    dependencies: [],
+                  },
+                  {
+                    name: 'promise',
+                    reference: '^7.1.1',
+                    pinnedReference: '7.3.1',
+                    url: 'https://registry.yarnpkg.com/promise/-/promise-7.3.1.tgz',
+                    dependencies: [
+                      {
+                        name: 'asap',
+                        reference: '~2.0.3',
+                        pinnedReference: '2.0.6',
+                        url: 'https://registry.yarnpkg.com/asap/-/asap-2.0.6.tgz',
+                        dependencies: [],
+                      },
+                    ],
+                  },
+                  {
+                    name: 'setimmediate',
+                    reference: '^1.0.5',
+                    pinnedReference: '1.0.5',
+                    url: 'https://registry.yarnpkg.com/setimmediate/-/setimmediate-1.0.5.tgz',
+                    dependencies: [],
+                  },
+                  {
+                    name: 'ua-parser-js',
+                    reference: '^0.7.18',
+                    pinnedReference: '0.7.18',
+                    url: 'https://registry.yarnpkg.com/ua-parser-js/-/ua-parser-js-0.7.18.tgz',
+                    dependencies: [],
+                  },
+                ],
               },
               {
                 name: 'loose-envify',
-                reference: '^1.1.0',
+                reference: '^1.3.1',
+                pinnedReference: '1.4.0',
+                url: 'https://registry.yarnpkg.com/loose-envify/-/loose-envify-1.4.0.tgz',
+                dependencies: [
+                  {
+                    name: 'js-tokens',
+                    reference: '^3.0.0 || ^4.0.0',
+                    pinnedReference: '4.0.0',
+                    url: 'https://registry.yarnpkg.com/js-tokens/-/js-tokens-4.0.0.tgz',
+                    dependencies: [],
+                  },
+                ],
+              },
+              {
+                name: 'object-assign',
+                reference: '^4.1.1',
+                pinnedReference: '4.1.1',
+                url: 'https://registry.yarnpkg.com/object-assign/-/object-assign-4.1.1.tgz',
                 dependencies: [],
+              },
+            ],
+          },
+          {
+            name: 'fbjs',
+            reference: '^0.8.9',
+            pinnedReference: '0.8.17',
+            url: 'https://registry.yarnpkg.com/fbjs/-/fbjs-0.8.17.tgz',
+            dependencies: [
+              {
+                name: 'core-js',
+                reference: '^1.0.0',
+                pinnedReference: '1.2.7',
+                url: 'https://registry.yarnpkg.com/core-js/-/core-js-1.2.7.tgz',
+                dependencies: [],
+              },
+              {
+                name: 'isomorphic-fetch',
+                reference: '^2.1.1',
+                pinnedReference: '2.2.1',
+                url: 'https://registry.yarnpkg.com/isomorphic-fetch/-/isomorphic-fetch-2.2.1.tgz',
+                dependencies: [
+                  {
+                    name: 'node-fetch',
+                    reference: '^1.0.1',
+                    pinnedReference: '1.7.3',
+                    url: 'https://registry.yarnpkg.com/node-fetch/-/node-fetch-1.7.3.tgz',
+                    dependencies: [
+                      {
+                        name: 'encoding',
+                        reference: '^0.1.11',
+                        pinnedReference: '0.1.12',
+                        url: 'https://registry.yarnpkg.com/encoding/-/encoding-0.1.12.tgz',
+                        dependencies: [
+                          {
+                            name: 'iconv-lite',
+                            reference: '~0.4.13',
+                            pinnedReference: '0.4.23',
+                            url: 'https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.4.23.tgz',
+                            dependencies: [
+                              {
+                                name: 'safer-buffer',
+                                reference: '>= 2.1.2 < 3',
+                                pinnedReference: '2.1.2',
+                                url: 'https://registry.yarnpkg.com/safer-buffer/-/safer-buffer-2.1.2.tgz',
+                                dependencies: [],
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                      {
+                        name: 'is-stream',
+                        reference: '^1.0.1',
+                        pinnedReference: '1.1.0',
+                        url: 'https://registry.yarnpkg.com/is-stream/-/is-stream-1.1.0.tgz',
+                        dependencies: [],
+                      },
+                    ],
+                  },
+                  {
+                    name: 'whatwg-fetch',
+                    reference: '>=0.10.0',
+                    pinnedReference: '2.0.4',
+                    url: 'https://registry.yarnpkg.com/whatwg-fetch/-/whatwg-fetch-2.0.4.tgz',
+                    dependencies: [],
+                  },
+                ],
+              },
+              {
+                name: 'loose-envify',
+                reference: '^1.0.0',
+                pinnedReference: '1.4.0',
+                url: 'https://registry.yarnpkg.com/loose-envify/-/loose-envify-1.4.0.tgz',
+                dependencies: [
+                  {
+                    name: 'js-tokens',
+                    reference: '^3.0.0 || ^4.0.0',
+                    pinnedReference: '4.0.0',
+                    url: 'https://registry.yarnpkg.com/js-tokens/-/js-tokens-4.0.0.tgz',
+                    dependencies: [],
+                  },
+                ],
               },
               {
                 name: 'object-assign',
                 reference: '^4.1.0',
+                pinnedReference: '4.1.1',
+                url: 'https://registry.yarnpkg.com/object-assign/-/object-assign-4.1.1.tgz',
                 dependencies: [],
               },
               {
-                name: 'prop-types',
-                reference: '^15.5.10',
+                name: 'promise',
+                reference: '^7.1.1',
+                pinnedReference: '7.3.1',
+                url: 'https://registry.yarnpkg.com/promise/-/promise-7.3.1.tgz',
+                dependencies: [
+                  {
+                    name: 'asap',
+                    reference: '~2.0.3',
+                    pinnedReference: '2.0.6',
+                    url: 'https://registry.yarnpkg.com/asap/-/asap-2.0.6.tgz',
+                    dependencies: [],
+                  },
+                ],
+              },
+              {
+                name: 'setimmediate',
+                reference: '^1.0.5',
+                pinnedReference: '1.0.5',
+                url: 'https://registry.yarnpkg.com/setimmediate/-/setimmediate-1.0.5.tgz',
                 dependencies: [],
               },
-            ];
-            assert.deepEqual(actual, expected);
-            done();
+              {
+                name: 'ua-parser-js',
+                reference: '^0.7.18',
+                pinnedReference: '0.7.18',
+                url: 'https://registry.yarnpkg.com/ua-parser-js/-/ua-parser-js-0.7.18.tgz',
+                dependencies: [],
+              },
+            ],
           },
-        )
-        .catch(done);
-    });
-  });
+          {
+            name: 'loose-envify',
+            reference: '^1.1.0',
+            pinnedReference: '1.4.0',
+            url: 'https://registry.yarnpkg.com/loose-envify/-/loose-envify-1.4.0.tgz',
+            dependencies: [
+              {
+                name: 'js-tokens',
+                reference: '^3.0.0 || ^4.0.0',
+                pinnedReference: '4.0.0',
+                url: 'https://registry.yarnpkg.com/js-tokens/-/js-tokens-4.0.0.tgz',
+                dependencies: [],
+              },
+            ],
+          },
+          {
+            name: 'object-assign',
+            reference: '^4.1.0',
+            pinnedReference: '4.1.1',
+            url: 'https://registry.yarnpkg.com/object-assign/-/object-assign-4.1.1.tgz',
+            dependencies: [],
+          },
+          {
+            name: 'prop-types',
+            reference: '^15.5.10',
+            pinnedReference: '15.6.2',
+            url: 'https://registry.yarnpkg.com/prop-types/-/prop-types-15.6.2.tgz',
+            dependencies: [
+              {
+                name: 'loose-envify',
+                reference: '^1.3.1',
+                pinnedReference: '1.4.0',
+                url: 'https://registry.yarnpkg.com/loose-envify/-/loose-envify-1.4.0.tgz',
+                dependencies: [
+                  {
+                    name: 'js-tokens',
+                    reference: '^3.0.0 || ^4.0.0',
+                    pinnedReference: '4.0.0',
+                    url: 'https://registry.yarnpkg.com/js-tokens/-/js-tokens-4.0.0.tgz',
+                    dependencies: [],
+                  },
+                ],
+              },
+              {
+                name: 'object-assign',
+                reference: '^4.1.1',
+                pinnedReference: '4.1.1',
+                url: 'https://registry.yarnpkg.com/object-assign/-/object-assign-4.1.1.tgz',
+                dependencies: [],
+              },
+            ],
+          },
+        ],
+      };
 
-  describe('getPackageDependencyTree', () => {
-    it('Runable', (done: any) => {
-      getPinnedReferencePackage({
-        name: 'react',
-        reference: '^15.5.4',
-        dependencies: [],
-      }).then((pinnedDependency: IPackage) => {
-        getPackageDependencies(pinnedDependency).then((dependencies: IPackage[]) => {
-          getPackageDependencyTree(
-            {
-              ...pinnedDependency,
-              dependencies,
-            },
-            new Map(),
-          ).then((res: IPackage) => {
-            const actual: IPackage = res;
-            const expected: IPackage = {
-              name: 'react',
-              reference: '15.6.2',
-              dependencies: [
-                {
-                  name: 'create-react-class',
-                  reference: '15.6.3',
-                  dependencies: [
-                    {
-                      name: 'fbjs',
-                      reference: '0.8.17',
-                      dependencies: [
-                        { name: 'core-js', reference: '1.2.7', dependencies: [] },
-                        {
-                          name: 'isomorphic-fetch',
-                          reference: '2.2.1',
-                          dependencies: [
-                            {
-                              name: 'node-fetch',
-                              reference: '1.7.3',
-                              dependencies: [
-                                {
-                                  name: 'encoding',
-                                  reference: '0.1.12',
-                                  dependencies: [
-                                    {
-                                      name: 'iconv-lite',
-                                      reference: '0.4.23',
-                                      dependencies: [{ name: 'safer-buffer', reference: '2.1.2', dependencies: [] }],
-                                    },
-                                  ],
-                                },
-                                { name: 'is-stream', reference: '1.1.0', dependencies: [] },
-                              ],
-                            },
-                            { name: 'whatwg-fetch', reference: '2.0.4', dependencies: [] },
-                          ],
-                        },
-                        {
-                          name: 'loose-envify',
-                          reference: '1.4.0',
-                          dependencies: [{ name: 'js-tokens', reference: '4.0.0', dependencies: [] }],
-                        },
-                        { name: 'object-assign', reference: '4.1.1', dependencies: [] },
-                        {
-                          name: 'promise',
-                          reference: '7.3.1',
-                          dependencies: [{ name: 'asap', reference: '2.0.6', dependencies: [] }],
-                        },
-                        { name: 'setimmediate', reference: '1.0.5', dependencies: [] },
-                        { name: 'ua-parser-js', reference: '0.7.18', dependencies: [] },
-                      ],
-                    },
-                    {
-                      name: 'loose-envify',
-                      reference: '1.4.0',
-                      dependencies: [{ name: 'js-tokens', reference: '4.0.0', dependencies: [] }],
-                    },
-                    { name: 'object-assign', reference: '4.1.1', dependencies: [] },
-                  ],
-                },
-                {
-                  name: 'fbjs',
-                  reference: '0.8.17',
-                  dependencies: [
-                    { name: 'core-js', reference: '1.2.7', dependencies: [] },
-                    {
-                      name: 'isomorphic-fetch',
-                      reference: '2.2.1',
-                      dependencies: [
-                        {
-                          name: 'node-fetch',
-                          reference: '1.7.3',
-                          dependencies: [
-                            {
-                              name: 'encoding',
-                              reference: '0.1.12',
-                              dependencies: [
-                                {
-                                  name: 'iconv-lite',
-                                  reference: '0.4.23',
-                                  dependencies: [{ name: 'safer-buffer', reference: '2.1.2', dependencies: [] }],
-                                },
-                              ],
-                            },
-                            { name: 'is-stream', reference: '1.1.0', dependencies: [] },
-                          ],
-                        },
-                        { name: 'whatwg-fetch', reference: '2.0.4', dependencies: [] },
-                      ],
-                    },
-                    {
-                      name: 'loose-envify',
-                      reference: '1.4.0',
-                      dependencies: [{ name: 'js-tokens', reference: '4.0.0', dependencies: [] }],
-                    },
-                    { name: 'object-assign', reference: '4.1.1', dependencies: [] },
-                    {
-                      name: 'promise',
-                      reference: '7.3.1',
-                      dependencies: [{ name: 'asap', reference: '2.0.6', dependencies: [] }],
-                    },
-                    { name: 'setimmediate', reference: '1.0.5', dependencies: [] },
-                    { name: 'ua-parser-js', reference: '0.7.18', dependencies: [] },
-                  ],
-                },
-                {
-                  name: 'loose-envify',
-                  reference: '1.4.0',
-                  dependencies: [{ name: 'js-tokens', reference: '4.0.0', dependencies: [] }],
-                },
-                { name: 'object-assign', reference: '4.1.1', dependencies: [] },
-                {
-                  name: 'prop-types',
-                  reference: '15.6.2',
-                  dependencies: [
-                    {
-                      name: 'loose-envify',
-                      reference: '1.4.0',
-                      dependencies: [{ name: 'js-tokens', reference: '4.0.0', dependencies: [] }],
-                    },
-                    { name: 'object-assign', reference: '4.1.1', dependencies: [] },
-                  ],
-                },
-              ],
-            };
-            assert.deepEqual(actual, expected);
-            done();
-          });
-        });
-      });
-    });
-  });
-
-  describe('getPinnedReferencePackage', () => {
-    it('Semver ^', (done: any) => {
-      getPinnedReferencePackage({
-        name: 'react',
-        reference: '^15.5.4',
-        dependencies: [],
-      }).then((pkg: IPackage) => {
-        const actual: IPackage = pkg;
-        // FYI: There is possibility to change version
-        const expected: IPackage = {
+      createPacakgeTree(
+        {
           name: 'react',
-          reference: '15.6.2',
-          dependencies: [],
-        };
+          reference: '15.6.1',
+        },
+        new Map(),
+      ).then((actual: IPackage) => {
         assert.deepEqual(actual, expected);
-        done();
-      });
-    });
-
-    it('Semver ~', (done: any) => {
-      getPinnedReferencePackage({
-        name: 'react',
-        reference: '~15.3.0',
-        dependencies: [],
-      }).then((pkg: IPackage) => {
-        const actual: IPackage = pkg;
-        // FYI: There is possibility to change version
-        const expected: IPackage = {
-          name: 'react',
-          reference: '15.3.2',
-          dependencies: [],
-        };
-        assert.deepEqual(actual, expected);
-        done();
-      });
-    });
-
-    it('Semver fixed version', (done: any) => {
-      getPinnedReferencePackage({
-        name: 'react',
-        reference: '15.3.0',
-        dependencies: [],
-      }).then((pkg: IPackage) => {
-        const actual: IPackage = pkg;
-        const expected: IPackage = {
-          name: 'react',
-          reference: '15.3.0',
-          dependencies: [],
-        };
-        assert.deepEqual(actual, expected);
-        done();
-      });
-    });
-
-    it('Semver fixed file', (done: any) => {
-      getPinnedReferencePackage({
-        name: 'react',
-        reference: '/tmp/react-15.3.2.tar.gz',
-        dependencies: [],
-      }).then((pkg: IPackage) => {
-        const actual: IPackage = pkg;
-        const expected: IPackage = {
-          name: 'react',
-          reference: '/tmp/react-15.3.2.tar.gz',
-          dependencies: [],
-        };
-        assert.deepEqual(actual, expected);
-        done();
-      });
-    });
-  });
-
-  describe('fetchPackage', () => {
-    it('Semver fixed version', (done: any) => {
-      fetchPackage({
-        name: 'react',
-        reference: '15.4.1',
-        dependencies: [],
-      }).then(() => {
-        assert.ok(true);
-        done();
-      });
-    });
-
-    it('Semver ^', (done: any) => {
-      fetchPackage({
-        name: 'react',
-        reference: '^15.5.4',
-        dependencies: [],
-      }).catch(() => {
-        assert.ok(true);
         done();
       });
     });
   });
 });
+
+const hoge: IPackage = {
+  name: 'react',
+  reference: '15.6.1',
+  pinnedReference: '15.6.1',
+  url: 'https://registry.yarnpkg.com/react/-/react-15.6.1.tgz',
+  dependencies: [
+    {
+      name: 'create-react-class',
+      reference: '^15.6.0',
+      pinnedReference: '15.6.3',
+      url: 'https://registry.yarnpkg.com/create-react-class/-/create-react-class-15.6.3.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'fbjs',
+      reference: '^0.8.9',
+      pinnedReference: '0.8.17',
+      url: 'https://registry.yarnpkg.com/fbjs/-/fbjs-0.8.17.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'loose-envify',
+      reference: '^1.1.0',
+      pinnedReference: '1.4.0',
+      url: 'https://registry.yarnpkg.com/loose-envify/-/loose-envify-1.4.0.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'object-assign',
+      reference: '^4.1.0',
+      pinnedReference: '4.1.1',
+      url: 'https://registry.yarnpkg.com/object-assign/-/object-assign-4.1.1.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'prop-types',
+      reference: '^15.5.10',
+      pinnedReference: '15.6.2',
+      url: 'https://registry.yarnpkg.com/prop-types/-/prop-types-15.6.2.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'core-js',
+      reference: '^1.0.0',
+      pinnedReference: '1.2.7',
+      url: 'https://registry.yarnpkg.com/core-js/-/core-js-1.2.7.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'isomorphic-fetch',
+      reference: '^2.1.1',
+      pinnedReference: '2.2.1',
+      url: 'https://registry.yarnpkg.com/isomorphic-fetch/-/isomorphic-fetch-2.2.1.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'promise',
+      reference: '^7.1.1',
+      pinnedReference: '7.3.1',
+      url: 'https://registry.yarnpkg.com/promise/-/promise-7.3.1.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'setimmediate',
+      reference: '^1.0.5',
+      pinnedReference: '1.0.5',
+      url: 'https://registry.yarnpkg.com/setimmediate/-/setimmediate-1.0.5.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'ua-parser-js',
+      reference: '^0.7.18',
+      pinnedReference: '0.7.18',
+      url: 'https://registry.yarnpkg.com/ua-parser-js/-/ua-parser-js-0.7.18.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'node-fetch',
+      reference: '^1.0.1',
+      pinnedReference: '1.7.3',
+      url: 'https://registry.yarnpkg.com/node-fetch/-/node-fetch-1.7.3.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'whatwg-fetch',
+      reference: '>=0.10.0',
+      pinnedReference: '2.0.4',
+      url: 'https://registry.yarnpkg.com/whatwg-fetch/-/whatwg-fetch-2.0.4.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'encoding',
+      reference: '^0.1.11',
+      pinnedReference: '0.1.12',
+      url: 'https://registry.yarnpkg.com/encoding/-/encoding-0.1.12.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'is-stream',
+      reference: '^1.0.1',
+      pinnedReference: '1.1.0',
+      url: 'https://registry.yarnpkg.com/is-stream/-/is-stream-1.1.0.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'iconv-lite',
+      reference: '~0.4.13',
+      pinnedReference: '0.4.23',
+      url: 'https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.4.23.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'safer-buffer',
+      reference: '>= 2.1.2 < 3',
+      pinnedReference: '2.1.2',
+      url: 'https://registry.yarnpkg.com/safer-buffer/-/safer-buffer-2.1.2.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'js-tokens',
+      reference: '^3.0.0 || ^4.0.0',
+      pinnedReference: '4.0.0',
+      url: 'https://registry.yarnpkg.com/js-tokens/-/js-tokens-4.0.0.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'asap',
+      reference: '~2.0.3',
+      pinnedReference: '2.0.6',
+      url: 'https://registry.yarnpkg.com/asap/-/asap-2.0.6.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'js-tokens',
+      reference: '^3.0.0 || ^4.0.0',
+      pinnedReference: '4.0.0',
+      url: 'https://registry.yarnpkg.com/js-tokens/-/js-tokens-4.0.0.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'core-js',
+      reference: '^1.0.0',
+      pinnedReference: '1.2.7',
+      url: 'https://registry.yarnpkg.com/core-js/-/core-js-1.2.7.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'isomorphic-fetch',
+      reference: '^2.1.1',
+      pinnedReference: '2.2.1',
+      url: 'https://registry.yarnpkg.com/isomorphic-fetch/-/isomorphic-fetch-2.2.1.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'promise',
+      reference: '^7.1.1',
+      pinnedReference: '7.3.1',
+      url: 'https://registry.yarnpkg.com/promise/-/promise-7.3.1.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'setimmediate',
+      reference: '^1.0.5',
+      pinnedReference: '1.0.5',
+      url: 'https://registry.yarnpkg.com/setimmediate/-/setimmediate-1.0.5.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'ua-parser-js',
+      reference: '^0.7.18',
+      pinnedReference: '0.7.18',
+      url: 'https://registry.yarnpkg.com/ua-parser-js/-/ua-parser-js-0.7.18.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'node-fetch',
+      reference: '^1.0.1',
+      pinnedReference: '1.7.3',
+      url: 'https://registry.yarnpkg.com/node-fetch/-/node-fetch-1.7.3.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'whatwg-fetch',
+      reference: '>=0.10.0',
+      pinnedReference: '2.0.4',
+      url: 'https://registry.yarnpkg.com/whatwg-fetch/-/whatwg-fetch-2.0.4.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'encoding',
+      reference: '^0.1.11',
+      pinnedReference: '0.1.12',
+      url: 'https://registry.yarnpkg.com/encoding/-/encoding-0.1.12.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'is-stream',
+      reference: '^1.0.1',
+      pinnedReference: '1.1.0',
+      url: 'https://registry.yarnpkg.com/is-stream/-/is-stream-1.1.0.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'iconv-lite',
+      reference: '~0.4.13',
+      pinnedReference: '0.4.23',
+      url: 'https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.4.23.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'safer-buffer',
+      reference: '>= 2.1.2 < 3',
+      pinnedReference: '2.1.2',
+      url: 'https://registry.yarnpkg.com/safer-buffer/-/safer-buffer-2.1.2.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'js-tokens',
+      reference: '^3.0.0 || ^4.0.0',
+      pinnedReference: '4.0.0',
+      url: 'https://registry.yarnpkg.com/js-tokens/-/js-tokens-4.0.0.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'asap',
+      reference: '~2.0.3',
+      pinnedReference: '2.0.6',
+      url: 'https://registry.yarnpkg.com/asap/-/asap-2.0.6.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'js-tokens',
+      reference: '^3.0.0 || ^4.0.0',
+      pinnedReference: '4.0.0',
+      url: 'https://registry.yarnpkg.com/js-tokens/-/js-tokens-4.0.0.tgz',
+      dependencies: [],
+    },
+    {
+      name: 'js-tokens',
+      reference: '^3.0.0 || ^4.0.0',
+      pinnedReference: '4.0.0',
+      url: 'https://registry.yarnpkg.com/js-tokens/-/js-tokens-4.0.0.tgz',
+      dependencies: [],
+    },
+  ],
+};
