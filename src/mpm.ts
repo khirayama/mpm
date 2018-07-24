@@ -156,7 +156,7 @@ export function optimizePackageTree(pkg: IPackage): IPackage {
         dependencies.push(subDependency);
       }
 
-      if (!availableDependency || availableDependency.reference === subDependency.reference) {
+      if (!availableDependency || availableDependency.pinnedReference === subDependency.pinnedReference) {
         hardDependency.dependencies.splice(
           hardDependency.dependencies.findIndex((dependency: IPackage) => {
             return dependency.name === subDependency.name;
@@ -185,11 +185,11 @@ export async function linkPackages(pkg: IPackage, cwd: string, pace?: Progress):
 
   const dependencyTree: IPackage = await createPacakgeTree(pkg, new Map(), pace);
 
-  if (pkg.reference) {
-    const res: Response = await nodeFetch(pkg.reference);
+  if (pkg.url) {
+    const res: Response = await nodeFetch(pkg.url);
 
     if (!res.ok) {
-      throw new Error(`Couldn't fetch package "${pkg.reference}"`);
+      throw new Error(`Couldn't fetch package "${pkg.name}@${pkg.pinnedReference}" as ${pkg.url}`);
     }
 
     const packageBuffer: Buffer = await res.buffer();
