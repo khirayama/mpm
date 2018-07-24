@@ -11,6 +11,9 @@ import * as semver from 'semver';
 
 import { extractNpmArchiveTo, readPackageJsonFromArchive } from 'utilities';
 
+const registry: string = 'https://registry.yarnpkg.com';
+// const registry: string = 'https://registry.npmjs.org'
+
 export interface IPackageJson {
   bin?: object;
   scripts?: object;
@@ -34,7 +37,7 @@ export async function getPinnedReference(name: string, reference: string): Promi
   let pinnedReference: string = reference;
 
   if (semver.validRange(reference) && !semver.valid(reference)) {
-    const res: Response = await nodeFetch(`https://registry.yarnpkg.com/${name}`);
+    const res: Response = await nodeFetch(`${registry}/${name}`);
     const info: { versions: object } = await res.json();
 
     const versions: string[] = Object.keys(info.versions);
@@ -57,7 +60,7 @@ export async function createPacakgeTree(
   pace?: Progress,
 ): Promise<IPackage> {
   const pinnedReference: string = await getPinnedReference(pkg.name, pkg.reference);
-  const url: string = `https://registry.yarnpkg.com/${pkg.name}/-/${pkg.name}-${pinnedReference}.tgz`;
+  const url: string = `${registry}/${pkg.name}/-/${pkg.name}-${pinnedReference}.tgz`;
 
   let packageJson: IPackageJson;
   if (pkg.reference === null) {
