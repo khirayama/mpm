@@ -148,7 +148,7 @@ export function optimizePackageTree(pkg: IPackage): IPackage {
 
   for (const hardDependency of dependencies.slice()) {
     for (const subDependency of hardDependency.dependencies.slice()) {
-      const availableDependency: IPackage = pkg.dependencies.find((dependency: IPackage) => {
+      const availableDependency: IPackage = dependencies.find((dependency: IPackage) => {
         return dependency.name === subDependency.name;
       });
 
@@ -156,7 +156,7 @@ export function optimizePackageTree(pkg: IPackage): IPackage {
         dependencies.push(subDependency);
       }
 
-      if (!availableDependency || availableDependency.pinnedReference === subDependency.pinnedReference) {
+      if (!availableDependency || availableDependency.name === subDependency.name) {
         hardDependency.dependencies.splice(
           hardDependency.dependencies.findIndex((dependency: IPackage) => {
             return dependency.name === subDependency.name;
@@ -183,8 +183,6 @@ export async function linkPackages(pkg: IPackage, cwd: string, pace?: Progress):
     pace.total += 1;
   }
 
-  const dependencyTree: IPackage = await createPacakgeTree(pkg, new Map(), pace);
-
   if (pkg.url) {
     const res: Response = await nodeFetch(pkg.url);
 
@@ -201,7 +199,7 @@ export async function linkPackages(pkg: IPackage, cwd: string, pace?: Progress):
       const target: string = `${cwd}/node_modules/${dependency.name}`;
       const binTarget: string = `${cwd}/node_modules/.bin`;
 
-      await linkPackages(pkg, target, pace);
+      await linkPackages(dependency, target, pace);
 
       // tslint:disable-next-line:non-literal-require
       const dependencyPackageJson: IPackageJson = require(`${target}/package.json`);
@@ -209,15 +207,15 @@ export async function linkPackages(pkg: IPackage, cwd: string, pace?: Progress):
 
       if (typeof bin === 'string') {
         bin = {
-          [pkg.name]: bin,
+          [dependency.name]: bin,
         };
       }
 
       for (const binName of Object.keys(bin)) {
         const source: string = path.resolve(target, bin[binName]);
-        const dest: string = `${binTarget}/${binName}`;
+        const dest: string = path.resolve(binTarget, binName);
 
-        await fsExtra.mkdirp(`${cwd}/node_modules/.bin`);
+        await fsExtra.mkdirp(binTarget);
         await fsExtra.symlink(path.relative(binTarget, source), dest);
       }
 
