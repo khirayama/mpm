@@ -22,7 +22,6 @@ const rootBasePackage: IBasePackage = {
     return createPacakgeTree(rootBasePackage, new Map(), pace);
   });
   const optimizedPackageTree: IPackage = optimizePackageTree(packageTree);
-  console.log(packageTree);
 
   console.log('Linking the packages on the filesystem...');
   await trackProgress<void>((pace: Progress) => linkPackages(optimizedPackageTree, dest, pace));
