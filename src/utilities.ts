@@ -124,7 +124,10 @@ export async function extractNpmArchiveTo(packageBuffer: Buffer, target: string)
 }
 
 export async function trackProgress<T>(cb: any): Promise<T> {
-  const pace: Progress = new Progress(':bar :current/:total (:elapseds)', { width: 80, total: 1 });
+  const pace: Progress = new Progress(':bar :current/:total (:elapseds)', {
+    width: 80,
+    total: 1,
+  });
 
   try {
     return await cb(pace);
